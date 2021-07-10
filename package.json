@@ -1,0 +1,93 @@
+{
+  "name": "coc-stylua",
+  "version": "0.0.1",
+  "description": "",
+  "author": "wongxy <xiyao.wong@foxmail.com>",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xiyaowong/coc-stylua"
+  },
+  "keywords": [
+    "coc.nvim"
+  ],
+  "engines": {
+    "coc": "^0.0.80"
+  },
+  "scripts": {
+    "lint": "eslint src --ext ts",
+    "clean": "rimraf lib",
+    "watch": "node esbuild.js --watch",
+    "build": "node esbuild.js",
+    "prepare": "node esbuild.js"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "printWidth": 120,
+    "semi": true
+  },
+  "devDependencies": {
+    "@types/node": "^16.3.1",
+    "@types/node-fetch": "^2.5.11",
+    "@types/unzipper": "^0.10.4",
+    "@typescript-eslint/eslint-plugin": "^4.8.2",
+    "@typescript-eslint/parser": "^4.8.2",
+    "coc.nvim": "^0.0.80",
+    "esbuild": "^0.8.42",
+    "eslint": "^7.14.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "node-fetch": "^2.6.1",
+    "prettier": "^2.2.0",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.1.2",
+    "unzipper": "^0.10.11"
+  },
+  "activationEvents": [
+    "onLanguage:lua"
+  ],
+  "contributes": {
+    "configuration": {
+      "title": "StyLua",
+      "properties": {
+        "stylua.releaseVersion": {
+          "type": "string",
+          "default": "latest",
+          "enum": [
+            "latest",
+            "v0.9",
+            "v0.8",
+            "v0.7",
+            "v0.6",
+            "v0.5"
+          ],
+          "enumDescriptions": [
+            "The most recent version released. This will always keep you up to date."
+          ],
+          "markdownDescription": "The release version to install. This is overridden by `#stylua.targetReleaseVersion#`."
+        },
+        "stylua.targetReleaseVersion": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Target a specific release version tag such as `v0.9.1` or `v0.9`. This overrides the version set by `#stylua.releaseVersion#`."
+        },
+        "stylua.styluaPath": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "Specifies the path of StyLua. If not specified, will automatically download one from the GitHub releases."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "stylua.reinstall",
+        "title": "Reinstall StyLua",
+        "category": "StyLua"
+      }
+    ]
+  }
+}
