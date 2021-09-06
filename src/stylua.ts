@@ -49,7 +49,7 @@ export function formatCode(
       output += data.toString();
     });
     child.stdout.on('close', () => {
-      resolve(output);
+      resolve(output.trimEnd());
     });
     child.stderr.on('data', (data) => reject(data.toString()));
     child.on('err', () => reject('Failed to start StyLua'));
