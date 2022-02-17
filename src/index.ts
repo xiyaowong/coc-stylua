@@ -37,57 +37,61 @@ export async function activate(context: coc.ExtensionContext) {
     })
   );
 
-  const disposable = coc.languages.registerDocumentRangeFormatProvider(['lua'], {
-    async provideDocumentRangeFormattingEdits(
-      document: coc.TextDocument,
-      range: coc.Range
-      /* options: coc.FormattingOptions,
+  const disposable = coc.languages.registerDocumentRangeFormatProvider(
+    ['lua'],
+    {
+      async provideDocumentRangeFormattingEdits(
+        document: coc.TextDocument,
+        range: coc.Range
+        /* options: coc.FormattingOptions,
       token: coc.CancellationToken */
-    ) {
-      if (!styluaBinaryPath) {
-        coc.window.showErrorMessage('StyLua not found. Could not format file', 'Install').then((option) => {
-          if (option === 'Install') {
-            util.downloadStyLuaVisual(context.storagePath);
-          }
-        });
-        return [];
-      }
+      ) {
+        if (!styluaBinaryPath) {
+          coc.window.showErrorMessage('StyLua not found. Could not format file', 'Install').then((option) => {
+            if (option === 'Install') {
+              util.downloadStyLuaVisual(context.storagePath);
+            }
+          });
+          return [];
+        }
 
-      const currentWorkspace = coc.workspace.getWorkspaceFolder(document.uri);
-      let cwd = currentWorkspace?.uri;
-      if (cwd) {
-        cwd = path.normalize(coc.Uri.parse(cwd).fsPath);
-      }
+        const currentWorkspace = coc.workspace.getWorkspaceFolder(document.uri);
+        let cwd = currentWorkspace?.uri;
+        if (cwd) {
+          cwd = path.normalize(coc.Uri.parse(cwd).fsPath);
+        }
 
-      if (await checkIgnored(document.uri, currentWorkspace?.uri)) {
-        return [];
-      }
+        if (await checkIgnored(document.uri, currentWorkspace?.uri)) {
+          return [];
+        }
 
-      const text = document.getText();
+        const text = document.getText();
 
-      try {
-        const formattedText = await formatCode(
-          styluaBinaryPath,
-          text,
-          cwd,
-          byteOffset(document, range.start),
-          byteOffset(document, range.end)
-        );
-        // Replace the whole document with our new formatted version
-        const lastLineNumber = document.lineCount - 1;
-        const doc = coc.workspace.getDocument(document.uri);
-        const fullDocumentRange = coc.Range.create(
-          { line: 0, character: 0 },
-          { line: lastLineNumber, character: doc.getline(lastLineNumber).length }
-        );
-        const format = coc.TextEdit.replace(fullDocumentRange, formattedText);
-        return [format];
-      } catch (err) {
-        coc.window.showErrorMessage(`Could not format file: ${err}`);
-        return [];
-      }
+        try {
+          const formattedText = await formatCode(
+            styluaBinaryPath,
+            text,
+            cwd,
+            byteOffset(document, range.start),
+            byteOffset(document, range.end)
+          );
+          // Replace the whole document with our new formatted version
+          const lastLineNumber = document.lineCount - 1;
+          const doc = coc.workspace.getDocument(document.uri);
+          const fullDocumentRange = coc.Range.create(
+            { line: 0, character: 0 },
+            { line: lastLineNumber, character: doc.getline(lastLineNumber).length }
+          );
+          const format = coc.TextEdit.replace(fullDocumentRange, formattedText);
+          return [format];
+        } catch (err) {
+          coc.window.showErrorMessage(`Could not format file: ${err}`);
+          return [];
+        }
+      },
     },
-  });
+    999
+  );
 
   context.subscriptions.push(disposable);
 }
