@@ -53,11 +53,11 @@ const getDownloadOutputFilename = () => {
 const getAssetFilenamePattern = () => {
   switch (os.platform()) {
     case 'win32':
-      return /stylua-[\d\w\-\.]+-win64.zip/;
+      return /stylua(-[\d\w\-\.]+)?-win64.zip/;
     case 'linux':
-      return /stylua-[\d\w\-\.]+-linux.zip/;
+      return /stylua(-[\d\w\-\.]+)?-linux.zip/;
     case 'darwin':
-      return /stylua-[\d\w\-\.]+-macos.zip/;
+      return /stylua(-[\d\w\-\.]+)?-macos.zip/;
     default:
       throw new Error('Platform not supported');
   }
@@ -141,7 +141,7 @@ export const ensureStyluaExists = async (storageDirectory: string): Promise<stri
   const path = await getStyluaPath(storageDirectory);
 
   if (path === undefined) {
-    await fs.promises.mkdir(storageDirectory.toString());
+    if (!fileExists(storageDirectory.toString())) await fs.promises.mkdir(storageDirectory.toString());
     await downloadStyLuaVisual(storageDirectory);
     return await getStyluaPath(storageDirectory);
   } else {
