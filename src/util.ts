@@ -153,17 +153,19 @@ export const ensureStyluaExists = async (storageDirectory: string): Promise<stri
     try {
       const currentVersion = (await executeStylua(path, ['--version']))?.trim();
       const desiredVersion = getDesiredVersion();
-      let release: GithubRelease;
+      let release: GithubRelease | undefined = undefined;
       try {
         release = await getRelease(desiredVersion);
       } catch (err) {
         console.error(err);
-        return;
       }
-      if (
-        currentVersion !== `stylua ${release.tag_name.startsWith('v') ? release.tag_name.substr(1) : release.tag_name}`
-      ) {
-        openUpdatePrompt(storageDirectory, release);
+      if (release) {
+        if (
+          currentVersion !==
+          `stylua ${release.tag_name.startsWith('v') ? release.tag_name.substr(1) : release.tag_name}`
+        ) {
+          openUpdatePrompt(storageDirectory, release);
+        }
       }
     } catch (err) {
       vscode.window.showWarningMessage(
