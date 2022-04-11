@@ -153,7 +153,13 @@ export const ensureStyluaExists = async (storageDirectory: string): Promise<stri
     try {
       const currentVersion = (await executeStylua(path, ['--version']))?.trim();
       const desiredVersion = getDesiredVersion();
-      const release = await getRelease(desiredVersion);
+      let release: GithubRelease;
+      try {
+        release = await getRelease(desiredVersion);
+      } catch (err) {
+        console.error(err);
+        return;
+      }
       if (
         currentVersion !== `stylua ${release.tag_name.startsWith('v') ? release.tag_name.substr(1) : release.tag_name}`
       ) {
