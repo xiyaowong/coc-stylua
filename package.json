@@ -82,6 +82,14 @@
           ],
           "default": null,
           "description": "Specifies the path of StyLua. If not specified, will automatically download one from the GitHub releases."
+        },
+        "stylua.configPath": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null,
+          "description": "Specify path to stylua.toml configuration file."
         }
       }
     },

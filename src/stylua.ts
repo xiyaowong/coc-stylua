@@ -4,6 +4,8 @@ import ignore from 'ignore';
 import { fileExists } from './util';
 import path from 'path';
 
+const configPath = coc.workspace.getConfiguration('stylua').get<string>('configPath');
+
 export async function checkIgnored(filePath?: string, currentWorkspace?: string): Promise<boolean> {
   if (!filePath || !currentWorkspace) {
     return false;
@@ -40,6 +42,10 @@ export function formatCode(
     if (endPos) {
       args.push('--range-end');
       args.push(endPos.toString());
+    }
+    if (configPath) {
+      args.push('--config-path');
+      args.push(configPath);
     }
     args.push('-');
 
