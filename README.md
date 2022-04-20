@@ -19,6 +19,8 @@ You can add "lua" to `coc.preferences.formatOnSaveFiletypes` to format your code
 You can specify the path of the StyLua binary using the `stylua.styluaPath` setting.
 By default, if this is null, the extension will download the binary and store it in its local storage.
 
+You can use `stylua.configPath` to specify path to stylua.toml configuration file.
+
 ## Commands
 
 - `stylua.reinstall` Reinstall StyLua
