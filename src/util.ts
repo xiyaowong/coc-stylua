@@ -93,7 +93,7 @@ const downloadStylua = async (outputDirectory: string) => {
       });
 
       return new Promise(async (resolve, reject) => {
-        fetch(asset.browser_download_url.replace('github.com', 'download.fastgit.org'), {
+        fetch(asset.browser_download_url, {
           headers: {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             'User-Agent': 'stylua-vscode',
