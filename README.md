@@ -21,6 +21,8 @@ By default, if this is null, the extension will download the binary and store it
 
 You can use `stylua.configPath` to specify path to stylua.toml configuration file.
 
+`stylua.checkUpdate` boolean value indicates whether to check out the latest stylua version.
+
 ## Commands
 
 - `stylua.reinstall` Reinstall StyLua

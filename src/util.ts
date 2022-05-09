@@ -150,6 +150,11 @@ export const ensureStyluaExists = async (storageDirectory: string): Promise<stri
       return;
     }
 
+    const config = vscode.workspace.getConfiguration('stylua');
+    const checkUpdate = config.get<boolean>('checkUpdate', true);
+    if (!checkUpdate) {
+      return path;
+    }
     try {
       const currentVersion = (await executeStylua(path, ['--version']))?.trim();
       const desiredVersion = getDesiredVersion();
