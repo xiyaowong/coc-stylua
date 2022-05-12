@@ -7,6 +7,7 @@ import * as unzip from 'unzipper';
 import fetch from 'node-fetch';
 import { executeStylua } from './stylua';
 import path from 'path';
+import * as semver from 'semver';
 
 const RELEASES_URL = 'https://api.github.com/repos/JohnnyMorganz/StyLua/releases';
 
@@ -150,9 +151,19 @@ export const ensureStyluaExists = async (storageDirectory: string): Promise<stri
       return;
     }
 
+    const config = vscode.workspace.getConfiguration('stylua');
+    const checkUpdate = config.get<boolean>('checkUpdate', true);
     try {
-      const currentVersion = (await executeStylua(path, ['--version']))?.trim();
+      const currentVersion = (await executeStylua(path, ['--version']))?.trim().split(' ')[1];
       const desiredVersion = getDesiredVersion();
+      if (!checkUpdate) {
+        // Do not check stylua update
+        if (desiredVersion === 'latest' || semver.satisfies(currentVersion, desiredVersion)) {
+          // Use current local version
+          return path;
+        }
+        // Local version can't satisfy desied version, prompt to download it
+      }
       let release: GithubRelease | undefined = undefined;
       try {
         release = await getRelease(desiredVersion);
@@ -160,10 +171,7 @@ export const ensureStyluaExists = async (storageDirectory: string): Promise<stri
         console.error(err);
       }
       if (release) {
-        if (
-          currentVersion !==
-          `stylua ${release.tag_name.startsWith('v') ? release.tag_name.substr(1) : release.tag_name}`
-        ) {
+        if (currentVersion !== (release.tag_name.startsWith('v') ? release.tag_name.substr(1) : release.tag_name)) {
           openUpdatePrompt(storageDirectory, release);
         }
       }

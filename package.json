@@ -30,6 +30,7 @@
   "devDependencies": {
     "@types/node": "^16.3.1",
     "@types/node-fetch": "^2.5.11",
+    "@types/semver": "^7.3.9",
     "@types/unzipper": "^0.10.4",
     "@typescript-eslint/eslint-plugin": "^4.8.2",
     "@typescript-eslint/parser": "^4.8.2",
@@ -41,6 +42,7 @@
     "node-fetch": "^2.6.1",
     "prettier": "^2.2.0",
     "rimraf": "^3.0.2",
+    "semver": "^7.3.7",
     "typescript": "^4.1.2",
     "unzipper": "^0.10.11"
   },
@@ -90,6 +92,11 @@
           ],
           "default": null,
           "description": "Specify path to stylua.toml configuration file."
+        },
+        "stylua.checkUpdate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to check out the latest stylua version."
         }
       }
     },
