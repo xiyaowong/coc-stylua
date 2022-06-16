@@ -72,6 +72,7 @@ export async function activate(context: coc.ExtensionContext) {
         byteOffset(document, range.start),
         byteOffset(document, range.end)
       );
+      if (!formattedText.length) return;
       // Replace the whole document with our new formatted version
       const lastLineNumber = document.lineCount - 1;
       const doc = coc.workspace.getDocument(document.uri);
