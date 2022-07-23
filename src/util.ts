@@ -1,15 +1,18 @@
 // Based off https://github.com/Kampfkarren/selene/blob/master/selene-vscode/src/util.ts
 // Licensed under https://github.com/Kampfkarren/selene/blob/master/LICENSE.md
-import * as vscode from 'coc.nvim';
-import * as os from 'os';
+import * as coc from 'coc.nvim';
 import * as fs from 'fs';
-import * as unzip from 'unzipper';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import fetch from 'node-fetch';
-import { executeStylua } from './stylua';
+import * as os from 'os';
 import path from 'path';
 import * as semver from 'semver';
+import * as unzip from 'unzipper';
+import { executeStylua } from './stylua';
 
 const RELEASES_URL = 'https://api.github.com/repos/JohnnyMorganz/StyLua/releases';
+
+const agent = () => (process.env.https_proxy ? new HttpsProxyAgent(process.env.https_proxy as string) : null);
 
 type GithubRelease = {
   assets: {
@@ -25,7 +28,8 @@ type GithubRelease = {
 
 const getRelease = async (version: string): Promise<GithubRelease> => {
   if (version === 'latest') {
-    return await (await fetch(RELEASES_URL + '/latest')).json();
+    // @ts-ignore
+    return await (await fetch(RELEASES_URL + '/latest', { agent: agent(), timeout: 10e3 })).json();
   }
 
   version = version.startsWith('v') ? version : 'v' + version;
@@ -65,7 +69,7 @@ const getAssetFilenamePattern = () => {
 };
 
 const getDesiredVersion = (): string => {
-  const config = vscode.workspace.getConfiguration('stylua');
+  const config = coc.workspace.getConfiguration('stylua');
   const targetVersion = config.get<string>('targetReleaseVersion', '').trim();
   if (targetVersion.length === 0) {
     return config.get<string>('releaseVersion', 'latest');
@@ -73,8 +77,8 @@ const getDesiredVersion = (): string => {
   return targetVersion;
 };
 
-export const fileExists = async (path: vscode.Uri | string): Promise<boolean> => {
-  const uri = path instanceof vscode.Uri ? path : vscode.Uri.file(path);
+export const fileExists = async (path: coc.Uri | string): Promise<boolean> => {
+  const uri = path instanceof coc.Uri ? path : coc.Uri.file(path);
   return fs.promises.stat(uri.fsPath).then(
     () => true,
     () => false
@@ -99,6 +103,9 @@ const downloadStylua = async (outputDirectory: string) => {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             'User-Agent': 'stylua-vscode',
           },
+          timeout: 10e3,
+          // @ts-ignore
+          agent: agent(),
         })
           .then((res) => res.body.pipe(unzip.Parse()))
           .then((stream) => {
@@ -117,7 +124,7 @@ const downloadStylua = async (outputDirectory: string) => {
 };
 
 export const downloadStyLuaVisual = (outputDirectory: string) => {
-  return vscode.window.withProgress(
+  return coc.window.withProgress(
     {
       title: 'Downloading StyLua',
       cancellable: false,
@@ -127,7 +134,7 @@ export const downloadStyLuaVisual = (outputDirectory: string) => {
 };
 
 export const getStyluaPath = async (storageDirectory: string): Promise<string | undefined> => {
-  const settingPath = vscode.workspace.getConfiguration('stylua').get<string | null>('styluaPath');
+  const settingPath = coc.workspace.getConfiguration('stylua').get<string | null>('styluaPath');
   if (settingPath) {
     return settingPath;
   }
@@ -147,11 +154,11 @@ export const ensureStyluaExists = async (storageDirectory: string): Promise<stri
     return await getStyluaPath(storageDirectory);
   } else {
     if (!(await fileExists(path))) {
-      vscode.window.showErrorMessage(`The path given for StyLua (${path}) does not exist`);
+      coc.window.showErrorMessage(`The path given for StyLua (${path}) does not exist`);
       return;
     }
 
-    const config = vscode.workspace.getConfiguration('stylua');
+    const config = coc.workspace.getConfiguration('stylua');
     const checkUpdate = config.get<boolean>('checkUpdate', true);
     try {
       const currentVersion = (await executeStylua(path, ['--version']))?.trim().split(' ')[1];
@@ -176,7 +183,7 @@ export const ensureStyluaExists = async (storageDirectory: string): Promise<stri
         }
       }
     } catch (err) {
-      vscode.window.showWarningMessage(
+      coc.window.showWarningMessage(
         `Error checking the selected StyLua version, falling back to the currently installed version:\n${err}`
       );
     }
@@ -186,7 +193,7 @@ export const ensureStyluaExists = async (storageDirectory: string): Promise<stri
 };
 
 function openUpdatePrompt(directory: string, release: GithubRelease) {
-  vscode.window
+  coc.window
     .showInformationMessage(`StyLua ${release.tag_name} is available to install.`, 'Install', 'Later')
     .then((option) => {
       switch (option) {
