@@ -18,7 +18,8 @@
     "node": ">=18.0.0"
   },
   "activationEvents": [
-    "onLanguage:lua"
+    "onLanguage:lua",
+    "onLanguage:luau"
   ],
   "contributes": {
     "configuration": {
