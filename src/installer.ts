@@ -4,6 +4,7 @@ import path from 'node:path'
 import process from 'node:process'
 import * as coc from 'coc.nvim'
 import * as semver from 'semver'
+import { stopClient } from './index'
 import { getStyluaVersion } from './stylua'
 import {
   ensureDirectory,
@@ -128,13 +129,18 @@ const selectAsset = (release: StyluaRelease): ReleaseAsset => {
 }
 
 const installStylua = async (storageDirectory: string, version: string): Promise<string> =>
-  coc.window.withProgress({ title: `Installing StyLua (${version})`, cancellable: false }, async (progress) => {
+  coc.window.withProgress({ title: `Installing StyLua (${version})`, cancellable: true }, async (progress, token) => {
     progress.report({ message: 'Resolving release...' })
     const release = await getRelease(version)
+    if (token.isCancellationRequested) {
+      throw new Error('Canceled')
+    }
     const asset = selectAsset(release)
 
+    await stopClient()
     await ensureDirectory(storageDirectory)
     const target = path.join(storageDirectory, executableName())
+
     progress.report({ message: `Downloading ${asset.name}...` })
     await coc.download(asset.browser_download_url, {
       dest: storageDirectory,
@@ -142,7 +148,11 @@ const installStylua = async (storageDirectory: string, version: string): Promise
       timeout: DOWNLOAD_TIMEOUT,
       headers: { 'User-Agent': USER_AGENT },
       onProgress: percent => progress.report({ message: `Downloading ${asset.name} (${percent}%)` }),
-    })
+    }, token)
+
+    if (token.isCancellationRequested) {
+      throw new Error('Canceled')
+    }
 
     if (!(await fileExists(target))) {
       throw new Error(`The downloaded archive ${asset.name} does not contain ${executableName()}`)
@@ -163,7 +173,9 @@ export const reinstallStylua = async (storageDirectory: string): Promise<string 
     coc.window.showInformationMessage(`StyLua installed at ${installed}`)
     return installed
   } catch (error) {
-    coc.window.showErrorMessage(`Failed to install StyLua: ${errorMessage(error)}`)
+    if (errorMessage(error) !== 'Canceled') {
+      coc.window.showErrorMessage(`Failed to install StyLua: ${errorMessage(error)}`)
+    }
     return undefined
   }
 }

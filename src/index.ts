@@ -5,7 +5,7 @@ import { ensureStyluaExists, reinstallStylua } from './installer'
 let client: coc.LanguageClient | undefined
 let registration: coc.Disposable | undefined
 
-const stopClient = async (): Promise<void> => {
+export const stopClient = async (): Promise<void> => {
   const current = client
   const currentRegistration = registration
   client = undefined
@@ -36,6 +36,7 @@ const startClient = async (storagePath: string): Promise<void> => {
 export async function activate(context: coc.ExtensionContext): Promise<void> {
   context.subscriptions.push(
     coc.commands.registerCommand('stylua.reinstall', async () => {
+      await stopClient()
       if (await reinstallStylua(context.storagePath)) {
         await startClient(context.storagePath)
       }
