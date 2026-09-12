@@ -1,10 +1,10 @@
 {
   "name": "coc-stylua",
-  "version": "0.0.11",
+  "type": "commonjs",
+  "version": "0.0.12",
   "description": "StyLua extension for coc.nvim.",
   "author": "wongxy <xiyao.wong@foxmail.com>",
   "license": "MIT",
-  "main": "lib/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/xiyaowong/coc-stylua"
@@ -12,40 +12,10 @@
   "keywords": [
     "coc.nvim"
   ],
+  "main": "lib/index.js",
   "engines": {
-    "coc": "^0.0.80"
-  },
-  "scripts": {
-    "lint": "eslint src --ext ts",
-    "clean": "rimraf lib",
-    "watch": "node esbuild.js --watch",
-    "build": "node esbuild.js",
-    "prepare": "node esbuild.js"
-  },
-  "prettier": {
-    "singleQuote": true,
-    "printWidth": 120,
-    "semi": true
-  },
-  "devDependencies": {
-    "@types/node": "^16.3.1",
-    "@types/node-fetch": "^2.5.11",
-    "@types/semver": "^7.3.9",
-    "@types/unzipper": "^0.10.4",
-    "@typescript-eslint/eslint-plugin": "^4.8.2",
-    "@typescript-eslint/parser": "^4.8.2",
-    "coc.nvim": "^0.0.80",
-    "esbuild": "^0.8.42",
-    "eslint": "^7.14.0",
-    "eslint-config-prettier": "^8.1.0",
-    "eslint-plugin-prettier": "^3.1.4",
-    "https-proxy-agent": "^5.0.1",
-    "node-fetch": "^2.6.1",
-    "prettier": "^2.2.0",
-    "rimraf": "^3.0.2",
-    "semver": "^7.3.7",
-    "typescript": "^4.1.2",
-    "unzipper": "^0.10.11"
+    "coc": "^0.0.80",
+    "node": ">=18.0.0"
   },
   "activationEvents": [
     "onLanguage:lua"
@@ -57,26 +27,7 @@
         "stylua.releaseVersion": {
           "type": "string",
           "default": "latest",
-          "enum": [
-            "latest",
-            "v0.12",
-            "v0.11",
-            "v0.10",
-            "v0.9",
-            "v0.8",
-            "v0.7",
-            "v0.6",
-            "v0.5"
-          ],
-          "enumDescriptions": [
-            "The most recent version released. This will always keep you up to date."
-          ],
-          "markdownDescription": "The release version to install. This is overridden by `#stylua.targetReleaseVersion#`."
-        },
-        "stylua.targetReleaseVersion": {
-          "type": "string",
-          "default": "",
-          "markdownDescription": "Target a specific release version tag such as `v0.9.1` or `v0.9`. This overrides the version set by `#stylua.releaseVersion#`."
+          "markdownDescription": "The release version to install, e.g. `latest`, `v2.5.2` or `v2.5`."
         },
         "stylua.styluaPath": {
           "type": [
@@ -84,7 +35,7 @@
             "null"
           ],
           "default": null,
-          "description": "Specifies the path of StyLua. If not specified, will automatically download one from the GitHub releases."
+          "description": "Specifies the path of the StyLua executable, or a command name available on PATH. If not specified, will automatically download one from the GitHub releases."
         },
         "stylua.configPath": {
           "type": [
@@ -92,7 +43,15 @@
             "null"
           ],
           "default": null,
-          "description": "Specify path to stylua.toml configuration file."
+          "description": "Specify path to stylua.toml configuration file. Passed to the language server as --config-path."
+        },
+        "stylua.formatOptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Extra arguments passed to `stylua --lsp`, e.g. `[\"--indent-type\", \"Spaces\", \"--indent-width\", \"4\"]`. A single space separated string is accepted too.\n\nUse the FORMATTING OPTIONS listed by `stylua -h`: `--call-parentheses`, `--collapse-simple-statement`, `--column-width`, `--indent-type`, `--indent-width`, `--line-endings`, `--preserve-block-newline-gaps`, `--quote-style`, `--sort-requires`, `--space-after-function-names`, `--syntax`. They take precedence over `stylua.toml` and `stylua.configPath`."
         },
         "stylua.checkUpdate": {
           "type": "boolean",
@@ -108,5 +67,27 @@
         "category": "StyLua"
       }
     ]
+  },
+  "scripts": {
+    "build": "tsdown",
+    "watch": "tsdown --watch",
+    "clean": "node -e \"require('node:fs').rmSync('lib', { recursive: true, force: true })\"",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prepare": "tsdown"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "@types/semver": "^7.8.0",
+    "@wongxy/eslint-config": "^4.0.1",
+    "adm-zip": "^0.6.1",
+    "coc.nvim": "^0.0.83-next.27",
+    "eslint": "^10.10.0",
+    "https-proxy-agent": "^7.0.6",
+    "node-fetch": "^3.3.2",
+    "semver": "^7.8.5",
+    "tsdown": "^0.23.0",
+    "typescript": "^5.9.3"
   }
 }

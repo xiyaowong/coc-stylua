@@ -4,10 +4,7 @@ tsconfig.json
 *.map
 .tags
 .DS_Store
-webpack.config.js
-esbuild.js
-yarn.lock
-yarn-error.log
 .github
-.eslintrc.js
-.prettierrc
+eslint.config.mjs
+tsdown.config.mts
+package-lock.json

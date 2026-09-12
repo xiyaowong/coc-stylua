@@ -1,36 +1,31 @@
 # coc-stylua
 
-[StyLua](https://github.com/JohnnyMorganz/StyLua) extension for coc.nvim.
-Forked from [stylua-vscode](https://github.com/JohnnyMorganz/StyLua/tree/master/stylua-vscode)
+[StyLua](https://github.com/JohnnyMorganz/StyLua) for coc.nvim.
 
 ## Install
 
-`:CocInstall coc-stylua`
+```
+:CocInstall coc-stylua
+```
 
-## Features
+## Usage
 
-- Format current buffer
-- Format selection
+- Just run coc's formatting commands.
+- Add `"lua"` to `coc.preferences.formatOnSaveFiletypes` to format on save.
 
-You can add "lua" to `coc.preferences.formatOnSaveFiletypes` to format your code automatically on save.
+## Settings
 
-## Extension Settings
-
-You can specify the path of the StyLua binary using the `stylua.styluaPath` setting.
-By default, if this is null, the extension will download the binary and store it in its local storage.
-
-You can use `stylua.configPath` to specify path to stylua.toml configuration file.
-
-`stylua.checkUpdate` boolean value indicates whether to check out the latest stylua version.
+- `stylua.releaseVersion`: version to install, `latest` by default.
+- `stylua.styluaPath`: path to a StyLua binary. When set, no download happens.
+- `stylua.configPath`: path to a `stylua.toml`.
+- `stylua.formatOptions`: extra arguments for `stylua --lsp`, e.g. `["--indent-width", "4"]`. See
+  `stylua -h` for the available FORMATTING OPTIONS. They override `stylua.toml`.
+- `stylua.checkUpdate`: check for a newer release after startup.
 
 ## Commands
 
-- `stylua.reinstall` Reinstall StyLua
+`:CocCommand stylua.reinstall` installs StyLua again.
 
 ## License
 
 MIT
-
----
-
-> This extension is built with [create-coc-extension](https://github.com/fannheyward/create-coc-extension)

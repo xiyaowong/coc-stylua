@@ -1,15 +1,12 @@
 {
   "compilerOptions": {
-    "target": "es2017",
-    "lib": ["es2017", "es2018"],
-    "module": "commonjs",
-    "declaration": false,
-    "sourceMap": true,
-    "outDir": "lib",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "preserve",
+    "types": ["node"],
     "strict": true,
-    "moduleResolution": "node",
-    "noImplicitAny": false,
-    "esModuleInterop": true
+    "noEmit": true,
+    "skipLibCheck": true
   },
   "include": ["src"]
 }
