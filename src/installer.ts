@@ -1,11 +1,8 @@
-import { Buffer } from 'node:buffer'
 import * as fs from 'node:fs'
 import * as os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
-import AdmZip from 'adm-zip'
 import * as coc from 'coc.nvim'
-import fetch from 'node-fetch'
 import * as semver from 'semver'
 import { getStyluaVersion } from './stylua'
 import {
@@ -13,14 +10,17 @@ import {
   errorMessage,
   executableName,
   fileExists,
-  getConfiguredStyluaPath,
+  getConfiguration,
   getDesiredVersion,
-  proxyAgent,
-  shouldCheckForUpdates,
+  getOptionalString,
 } from './util'
 
 const RELEASES_API = 'https://api.github.com/repos/JohnnyMorganz/StyLua/releases'
 const USER_AGENT = 'coc-stylua'
+const REQUEST_HEADERS = {
+  'User-Agent': USER_AGENT,
+  'Accept': 'application/vnd.github+json',
+}
 const REQUEST_TIMEOUT = 30_000
 const DOWNLOAD_TIMEOUT = 300_000
 const PAGE_SIZE = 100
@@ -37,30 +37,8 @@ interface StyluaRelease {
   assets: ReleaseAsset[]
 }
 
-class HttpError extends Error {
-  constructor(
-    readonly status: number,
-    message: string,
-  ) {
-    super(message)
-    this.name = 'HttpError'
-  }
-}
-
-const requestJson = async <T>(url: string): Promise<T> => {
-  const response = await fetch(url, {
-    agent: proxyAgent(),
-    headers: {
-      'User-Agent': USER_AGENT,
-      'Accept': 'application/vnd.github+json',
-    },
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT),
-  })
-  if (!response.ok) {
-    throw new HttpError(response.status, `Request to ${url} failed with ${response.status} ${response.statusText}`)
-  }
-  return (await response.json()) as T
-}
+const requestJson = async <T>(url: string): Promise<T> =>
+  (await coc.fetch(url, { headers: REQUEST_HEADERS, timeout: REQUEST_TIMEOUT })) as T
 
 const normalizeTag = (version: string): string => (version.startsWith('v') ? version : `v${version}`)
 
@@ -84,11 +62,8 @@ const getRelease = async (version: string): Promise<StyluaRelease> => {
   const tag = normalizeTag(version)
   try {
     return await requestJson<StyluaRelease>(`${RELEASES_API}/tags/${encodeURIComponent(tag)}`)
-  } catch (error) {
+  } catch {
     // Partial versions such as `v2.5` are not real tags, fall back to prefix matching below.
-    if (!(error instanceof HttpError) || error.status !== 404) {
-      throw error
-    }
   }
 
   const releases = await listReleases()
@@ -152,70 +127,27 @@ const selectAsset = (release: StyluaRelease): ReleaseAsset => {
   return selected.asset
 }
 
-const downloadAsset = async (asset: ReleaseAsset): Promise<Buffer> => {
-  const response = await fetch(asset.browser_download_url, {
-    agent: proxyAgent(),
-    headers: { 'User-Agent': USER_AGENT },
-    signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT),
-  })
-  if (!response.ok) {
-    throw new HttpError(
-      response.status,
-      `Failed to download ${asset.name}: ${response.status} ${response.statusText}`,
-    )
-  }
-
-  const archive = Buffer.from(await response.arrayBuffer())
-  if (archive.length === 0) {
-    throw new Error(`The downloaded archive ${asset.name} is empty`)
-  }
-  return archive
-}
-
-const extractExecutable = (archive: Buffer, entryName: string): Buffer => {
-  const entries = new AdmZip(archive).getEntries()
-  const entry = entries.find(item => path.posix.basename(item.entryName) === entryName)
-  if (!entry) {
-    const available = entries.map(item => item.entryName).join(', ') || '(none)'
-    throw new Error(`The downloaded archive does not contain ${entryName}: ${available}`)
-  }
-
-  const contents = entry.getData()
-  if (contents.length === 0) {
-    throw new Error(`${entryName} is empty inside the downloaded archive`)
-  }
-  return contents
-}
-
-/** Writes to a sibling file first, so a partial or unusable download can never look installed. */
-const writeExecutable = async (target: string, contents: Buffer): Promise<void> => {
-  const temporary = `${target}.download`
-  try {
-    await fs.promises.writeFile(temporary, contents, { mode: 0o755 })
-    await fs.promises.rm(target, { force: true })
-    await fs.promises.rename(temporary, target)
-  } catch (error) {
-    await fs.promises.rm(temporary, { force: true }).catch(() => undefined)
-    throw error
-  }
-  await fs.promises.chmod(target, 0o755).catch(() => undefined) // no-op on Windows
-}
-
 const installStylua = async (storageDirectory: string, version: string): Promise<string> =>
   coc.window.withProgress({ title: `Installing StyLua (${version})`, cancellable: false }, async (progress) => {
     progress.report({ message: 'Resolving release...' })
     const release = await getRelease(version)
     const asset = selectAsset(release)
 
-    progress.report({ message: `Downloading ${asset.name}...` })
-    const archive = await downloadAsset(asset)
-
-    progress.report({ message: 'Extracting...' })
-    const contents = extractExecutable(archive, executableName())
-
     await ensureDirectory(storageDirectory)
     const target = path.join(storageDirectory, executableName())
-    await writeExecutable(target, contents)
+    progress.report({ message: `Downloading ${asset.name}...` })
+    await coc.download(asset.browser_download_url, {
+      dest: storageDirectory,
+      extract: 'unzip',
+      timeout: DOWNLOAD_TIMEOUT,
+      headers: { 'User-Agent': USER_AGENT },
+      onProgress: percent => progress.report({ message: `Downloading ${asset.name} (${percent}%)` }),
+    })
+
+    if (!(await fileExists(target))) {
+      throw new Error(`The downloaded archive ${asset.name} does not contain ${executableName()}`)
+    }
+    await fs.promises.chmod(target, 0o755).catch(() => undefined)
 
     progress.report({ message: 'Verifying...' })
     if (!(await getStyluaVersion(target))) {
@@ -250,7 +182,7 @@ const promptForUpdate = async (storageDirectory: string, release: StyluaRelease)
 const checkForUpdate = async (storageDirectory: string, currentVersion: string): Promise<void> => {
   const desired = getDesiredVersion()
   if (desired === 'latest') {
-    if (!shouldCheckForUpdates()) {
+    if (!getConfiguration().get<boolean>('checkUpdate', true)) {
       return
     }
   } else if (semver.validRange(desired) && semver.satisfies(currentVersion, desired)) {
@@ -273,7 +205,7 @@ const checkForUpdate = async (storageDirectory: string, currentVersion: string):
 }
 
 export const ensureStyluaExists = async (storageDirectory: string): Promise<string | undefined> => {
-  const configured = getConfiguredStyluaPath()
+  const configured = getOptionalString('styluaPath')
   if (configured) {
     return configured
   }

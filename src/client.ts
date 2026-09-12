@@ -1,12 +1,12 @@
 import * as coc from 'coc.nvim'
-import { getConfiguredConfigPath, getFormatOptions } from './util'
+import { getFormatOptions, getOptionalString } from './util'
 
 export const CLIENT_ID = 'stylua'
 
-export const DOCUMENT_SELECTOR: coc.DocumentSelector = ['lua', 'luau']
+const DOCUMENT_SELECTOR: coc.DocumentSelector = ['lua', 'luau']
 
 const serverArguments = (): string[] => {
-  const configPath = getConfiguredConfigPath()
+  const configPath = getOptionalString('configPath')
   const args = ['--lsp']
   if (configPath) {
     args.push('--config-path', configPath)

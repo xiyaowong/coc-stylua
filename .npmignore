@@ -4,7 +4,6 @@ tsconfig.json
 *.map
 .tags
 .DS_Store
-.github
 eslint.config.mjs
 tsdown.config.mts
 package-lock.json

@@ -81,11 +81,8 @@
     "@types/node": "^22.20.2",
     "@types/semver": "^7.8.0",
     "@wongxy/eslint-config": "^4.0.1",
-    "adm-zip": "^0.6.1",
     "coc.nvim": "^0.0.83-next.27",
     "eslint": "^10.10.0",
-    "https-proxy-agent": "^7.0.6",
-    "node-fetch": "^3.3.2",
     "semver": "^7.8.5",
     "tsdown": "^0.23.0",
     "typescript": "^5.9.3"
