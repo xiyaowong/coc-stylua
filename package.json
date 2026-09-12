@@ -1,7 +1,7 @@
 {
   "name": "coc-stylua",
   "type": "commonjs",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "StyLua extension for coc.nvim.",
   "author": "wongxy <xiyao.wong@foxmail.com>",
   "license": "MIT",
